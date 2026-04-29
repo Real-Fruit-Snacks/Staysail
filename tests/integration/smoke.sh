@@ -332,8 +332,9 @@ out=$("$BIN" find src/applets -type f -name "all.zig" -o -name "cat.zig" | wc -l
 [[ "$out" -ge 2 ]] && assert_eq "find -or returns >=2 matches" "yes" "yes" || assert_eq "find -or returns >=2 matches" "yes" "no"
 
 echo "[find ! NOT]"
-out=$("$BIN" find src/applets -type f ! -name "*.zig" 2>/dev/null | wc -l)
-[[ "$out" == "0" ]] && assert_eq "find ! filters everything" "yes" "yes" || assert_eq "find ! filters everything" "yes" "no"
+# Strip wc's leading whitespace on BSD (macOS) so the comparison is portable.
+n_nonzig=$("$BIN" find src/applets -type f ! -name "*.zig" 2>/dev/null | wc -l | tr -d ' ')
+[[ "$n_nonzig" == "0" ]] && assert_eq "find ! filters everything" "yes" "yes" || assert_eq "find ! filters everything" "yes" "no"
 
 echo "[completions bash]"
 "$BIN" completions bash > /dev/null
