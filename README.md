@@ -16,7 +16,7 @@ A BusyBox-style multi-call binary in Zig — **84 Unix utilities**, one ~1 MB st
 
 [Download Latest](https://github.com/Real-Fruit-Snacks/Staysail/releases/latest)
 &nbsp;·&nbsp;
-[GitHub Pages](https://real-fruit-snacks.github.io/staysail/)
+[GitHub Pages](https://real-fruit-snacks.github.io/Staysail/)
 &nbsp;·&nbsp;
 [Changelog](CHANGELOG.md)
 &nbsp;·&nbsp;
