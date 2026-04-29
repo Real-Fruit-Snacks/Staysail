@@ -1,9 +1,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/staysail/main/docs/assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/staysail/main/docs/assets/logo-light.svg">
-  <img alt="staysail" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/staysail/main/docs/assets/logo-dark.svg" width="560">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Staysail/main/docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Staysail/main/docs/assets/logo-light.svg">
+  <img alt="staysail" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Staysail/main/docs/assets/logo-dark.svg" width="560">
 </picture>
 
 ![Zig](https://img.shields.io/badge/language-Zig-f7a41d.svg)
@@ -14,7 +14,7 @@
 
 A BusyBox-style multi-call binary in Zig — **84 Unix utilities**, one ~1 MB statically-linked executable, native on Linux, macOS, and Windows.
 
-[Download Latest](https://github.com/Real-Fruit-Snacks/staysail/releases/latest)
+[Download Latest](https://github.com/Real-Fruit-Snacks/Staysail/releases/latest)
 &nbsp;·&nbsp;
 [GitHub Pages](https://real-fruit-snacks.github.io/staysail/)
 &nbsp;·&nbsp;
@@ -49,7 +49,7 @@ Same idea — BusyBox-style single-binary shell toolkits — five different lang
 
 ```bash
 # Linux (glibc — Ubuntu, Debian, RHEL, …)
-curl -LO https://github.com/Real-Fruit-Snacks/staysail/releases/latest/download/staysail-linux-x64
+curl -LO https://github.com/Real-Fruit-Snacks/Staysail/releases/latest/download/staysail-linux-x64
 chmod +x staysail-linux-x64
 ./staysail-linux-x64 --version
 ```
@@ -57,7 +57,7 @@ chmod +x staysail-linux-x64
 **From source** — Zig 0.16+:
 
 ```bash
-git clone https://github.com/Real-Fruit-Snacks/staysail
+git clone https://github.com/Real-Fruit-Snacks/Staysail
 cd staysail
 zig build -Doptimize=ReleaseSmall
 ./zig-out/bin/staysail --list
@@ -248,7 +248,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full applet contract,
 ### Setting up
 
 ```bash
-git clone https://github.com/Real-Fruit-Snacks/staysail
+git clone https://github.com/Real-Fruit-Snacks/Staysail
 cd staysail
 zig build test                      # unit tests (~10ms)
 bash tests/integration/smoke.sh     # 87 integration assertions

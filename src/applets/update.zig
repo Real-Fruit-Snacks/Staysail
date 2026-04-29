@@ -12,7 +12,7 @@ pub const help: []const u8 =
     \\
     \\  --check          only check for updates; don't download
     \\  --force          re-download even if version matches
-    \\  --repo OWNER/NAME   override the GitHub repo (default: Real-Fruit-Snacks/staysail)
+    \\  --repo OWNER/NAME   override the GitHub repo (default: Real-Fruit-Snacks/Staysail)
     \\      --help       display this help and exit
     \\
     \\The current binary is replaced atomically; the previous version is kept
@@ -23,7 +23,7 @@ pub const help: []const u8 =
 pub fn run(ctx: *Context, args: []const [:0]const u8) !u8 {
     var check_only = false;
     var force = false;
-    var repo: []const u8 = "Real-Fruit-Snacks/staysail";
+    var repo: []const u8 = "Real-Fruit-Snacks/Staysail";
 
     var i: usize = 0;
     while (i < args.len) : (i += 1) {
