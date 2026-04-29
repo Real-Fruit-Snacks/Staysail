@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  ZIG_VERSION: 0.16.0
+
+jobs:
+  fmt:
+    name: zig fmt --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - run: zig fmt --check src/ build.zig build/
+
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - name: zig build test
+        run: zig build test --summary all
+      - name: zig build (full preset, debug)
+        run: zig build
+      - name: integration smoke (Bash)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: bash tests/integration/smoke.sh
+      - name: integration smoke (Git Bash on Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: bash tests/integration/smoke.sh ./zig-out/bin/staysail.exe
+
+  cross-compile:
+    name: cross-compile smoke
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-linux-gnu
+          - x86_64-linux-musl
+          - aarch64-linux-gnu
+          - aarch64-linux-musl
+          - x86_64-windows-gnu
+          - aarch64-windows-gnu
+          - x86_64-macos
+          - aarch64-macos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - name: build for ${{ matrix.target }}
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
+      - name: report binary size
+        run: ls -lh zig-out/bin/
+
+  preset-matrix:
+    name: preset (${{ matrix.preset }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [full, slim, minimal]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - run: zig build -Dpreset=${{ matrix.preset }} -Doptimize=ReleaseSmall
+      - run: ls -lh zig-out/bin/
+      - run: ./zig-out/bin/staysail --list

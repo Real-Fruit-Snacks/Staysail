@@ -1,0 +1,14 @@
+.{
+    .name = .staysail,
+    .version = "0.0.0",
+    .fingerprint = 0xa814b09b14802ffc,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}

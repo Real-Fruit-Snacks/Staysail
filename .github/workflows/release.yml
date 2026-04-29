@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.1.0)'
+        required: true
+
+env:
+  ZIG_VERSION: 0.16.0
+
+jobs:
+  build:
+    name: build ${{ matrix.target }} (${{ matrix.preset }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [full, slim]
+        target:
+          - x86_64-linux-gnu
+          - x86_64-linux-musl
+          - aarch64-linux-gnu
+          - aarch64-linux-musl
+          - x86_64-windows-gnu
+          - aarch64-windows-gnu
+          - x86_64-macos
+          - aarch64-macos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+
+      - name: derive version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ver="${{ github.event.inputs.tag }}"
+          else
+            ver="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=$ver" >> $GITHUB_OUTPUT
+          echo "stripped=${ver#v}" >> $GITHUB_OUTPUT
+
+      - name: build
+        run: |
+          zig build \
+            -Dtarget=${{ matrix.target }} \
+            -Dpreset=${{ matrix.preset }} \
+            -Doptimize=ReleaseSmall \
+            -Dversion=${{ steps.version.outputs.stripped }}
+
+      - name: rename + checksum
+        id: artifact
+        run: |
+          os_short=$(echo "${{ matrix.target }}" | sed -E 's/x86_64-/x64-/; s/aarch64-/arm64-/; s/-gnu//; s/-musl/-musl/')
+          slim=""
+          [[ "${{ matrix.preset }}" == "slim" ]] && slim="-slim"
+          ext=""
+          [[ "${{ matrix.target }}" == *"-windows-"* ]] && ext=".exe"
+          artifact="staysail-${os_short}${slim}${ext}"
+          mv "zig-out/bin/staysail${ext}" "$artifact"
+          sha256sum "$artifact" > "$artifact.sha256"
+          ls -lh "$artifact" "$artifact.sha256"
+          echo "name=$artifact" >> $GITHUB_OUTPUT
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: |
+            ${{ steps.artifact.outputs.name }}
+            ${{ steps.artifact.outputs.name }}.sha256
+          if-no-files-found: error
+
+  publish:
+    name: publish to release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: list artifacts
+        run: ls -lh dist/
+
+      - name: publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/staysail-*
+          fail_on_unmatched_files: true
