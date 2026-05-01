@@ -1,643 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>staysail — Unix utilities, in one Zig binary</title>
-    <meta name="description" content="A BusyBox-style multi-call binary in Zig. 84 Unix utilities, one ~1 MB statically-linked executable, native on Linux, macOS, and Windows. Cross-compile every target from one host.">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Inter,sans-serif' font-size='24' font-weight='800' fill='%23fab387'%3ES%3C/text%3E%3C/svg%3E">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <meta property="og:title" content="staysail — Unix utilities, in one Zig binary">
-    <meta property="og:description" content="A BusyBox-style multi-call binary in Zig. 84 Unix utilities, one ~1 MB statically-linked executable, native on Linux, macOS, and Windows.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://real-fruit-snacks.github.io/Staysail/">
-    <meta property="og:image" content="https://raw.githubusercontent.com/Real-Fruit-Snacks/Staysail/main/docs/assets/logo-dark.svg">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        :root{
-            --accent1:#fab387;--accent2:#f9e2af;--accentmid:#f38ba8;
-            --accentrgb:250,179,135;
-            --text:#cdd6f4;--sub1:#bac2de;--sub0:#a6adc8;
-            --ov2:#9399b2;--ov1:#7f849c;--ov0:#6c7086;
-            --sf2:#585b70;--sf1:#45475a;--sf0:#313244;
-            --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
-            --green:#a6e3a1;--yellow:#f9e2af;--red:#f38ba8;
-            --peach:#fab387;--mauve:#cba6f7;--teal:#94e2d5;--pink:#f5c2e7;--blue:#89b4fa;--lavender:#b4befe;--sapphire:#74c7ec;
-        }
-        body{font-family:'Inter',system-ui,sans-serif;background:var(--crust);color:var(--text);line-height:1.7;overflow-x:hidden}
-        ::selection{background:rgba(var(--accentrgb),0.3);color:var(--text)}
-        .container{max-width:1140px;margin:0 auto;padding:0 28px}
-        code{font-family:'JetBrains Mono',monospace;background:var(--mantle);padding:2px 7px;border-radius:3px;font-size:.88em;color:var(--green)}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staysail / Zig multi-call binary</title>
+<meta name="description" content="A BusyBox-style multi-call binary in Zig — 84 Unix utilities, one ~1 MB statically-linked executable, native on Linux, macOS, and Windows.">
+<meta property="og:title" content="Staysail — Zig multi-call binary">
+<meta property="og:description" content="84 POSIX utilities · ~1 MB static · 8 cross-compiled targets · Zig 0.16+. Sibling of mainsail/topsail/jib/moonraker/rill.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231e1e2e'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Inter,sans-serif' font-size='20' font-weight='800' fill='%23cdd6f4'%3ES%3Ctspan fill='%23f9e2af'%3E.%3C/tspan%3E%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
+  --sf0:#313244;--sf1:#45475a;--sf2:#585b70;
+  --ov0:#6c7086;--ov1:#7f849c;--ov2:#9399b2;
+  --sub0:#a6adc8;--sub1:#bac2de;--text:#cdd6f4;
+  --mauve:#cba6f7;--lav:#b4befe;--blue:#89b4fa;--sky:#89dceb;
+  --teal:#94e2d5;--green:#a6e3a1;--yellow:#f9e2af;--peach:#fab387;--red:#f38ba8;
+  --accent:#f9e2af; /* Staysail's color — Zig yellow */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--crust);color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:15px;line-height:1.5;
+}
+::selection{background:var(--accent);color:var(--crust)}
+a{color:inherit;text-decoration:none}
+.mono{font-family:'JetBrains Mono','SF Mono',monospace}
 
-        /* ── Nav ── */
-        .nav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(17,17,27,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(49,50,68,0.5);z-index:1000;display:flex;align-items:center;justify-content:center}
-        .nav-inner{max-width:1140px;width:100%;padding:0 28px;display:flex;align-items:center;justify-content:space-between}
-        .nav-logo{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-decoration:none}
-        .nav-links{display:flex;align-items:center;gap:28px}
-        .nav-links a{font-size:13px;font-weight:500;color:var(--ov0);text-decoration:none;transition:color .2s}
-        .nav-links a:hover{color:var(--text)}
-        .nav-cta{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
-        .nav-cta:hover{box-shadow:0 0 20px rgba(var(--accentrgb),0.3);transform:translateY(-1px)}
+/* ─── Top status bar ─────────────────────────────── */
+.status{
+  background:var(--crust);border-bottom:1px solid var(--text);
+  padding:10px 24px;display:flex;justify-content:space-between;
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--ov2);
+  position:sticky;top:0;z-index:10;
+}
+.status .left{display:flex;gap:24px;flex-wrap:wrap}
+.status .right{display:flex;gap:16px;flex-wrap:wrap}
+.status b{color:var(--accent);font-weight:700}
+.status .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;animation:pulse 2.5s infinite}
+.status a{color:var(--ov2);transition:color .15s}
+.status a:hover{color:var(--text)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-        /* ── Hero ── */
-        .hero{padding:140px 0 80px;text-align:center;position:relative}
-        .hero::before{content:'';position:absolute;top:60px;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(var(--accentrgb),0.08) 0%,transparent 60%);pointer-events:none}
-        .hero-logo{position:relative;max-width:600px;margin:0 auto 32px}
-        .hero-logo img{width:100%;height:auto}
-        .hero-tagline{position:relative;font-size:clamp(24px,3.5vw,38px);font-weight:700;line-height:1.2;margin-bottom:16px;background:linear-gradient(135deg,var(--accent1),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero-desc{position:relative;font-size:16px;color:var(--ov0);max-width:580px;margin:0 auto 32px}
-        .hero-ctas{position:relative;display:flex;gap:12px;justify-content:center;margin-bottom:48px}
-        .btn-primary{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:12px 28px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
-        .btn-primary:hover{box-shadow:0 0 24px rgba(var(--accentrgb),0.35);transform:translateY(-2px)}
-        .btn-secondary{background:var(--sf0);color:var(--text);padding:12px 28px;border-radius:8px;border:1px solid var(--sf1);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;text-decoration:none;transition:all .2s}
-        .btn-secondary:hover{background:var(--sf1);border-color:var(--sf2)}
+/* ─── Hero ─────────────────────────────────────── */
+.hero{
+  border-bottom:1px solid var(--text);
+  padding:64px 24px 0;
+}
+.hero-inner{max-width:1280px;margin:0 auto}
+.hero .pop{
+  font-family:'JetBrains Mono','SF Mono',monospace;
+  font-size:12px;font-weight:500;color:var(--ov1);
+  letter-spacing:0.1em;text-transform:uppercase;
+  display:block;margin-bottom:24px;
+}
+.hero h1{
+  font-family:'Inter',sans-serif;
+  font-size:clamp(64px,12vw,180px);
+  line-height:0.85;font-weight:800;
+  letter-spacing:-0.05em;color:var(--text);
+  margin-bottom:32px;
+}
+.hero h1 .dot{color:var(--accent)}
+.hero-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:0;border-top:1px solid var(--sf1);
+}
+.hero-grid > div{padding:20px 24px;border-right:1px solid var(--sf1)}
+.hero-grid > div:last-child{border-right:none}
+.hero-grid .label{
+  font-family:'JetBrains Mono','SF Mono',monospace;
+  font-size:10px;color:var(--ov0);
+  letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;
+}
+.hero-grid .value{
+  font-family:'Inter',sans-serif;
+  font-size:28px;font-weight:700;color:var(--text);
+  letter-spacing:-0.02em;
+}
+.hero-grid .value .unit{color:var(--accent);font-size:0.55em;font-weight:600;margin-left:2px}
 
-        /* ── Terminal ── */
-        .terminal{position:relative;max-width:800px;margin:0 auto;background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5),0 0 24px rgba(var(--accentrgb),0.06)}
-        .terminal-bar{background:var(--crust);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--sf0)}
-        .terminal-dot{width:12px;height:12px;border-radius:50%}
-        .terminal-dot:nth-child(1){background:var(--red)}
-        .terminal-dot:nth-child(2){background:var(--yellow)}
-        .terminal-dot:nth-child(3){background:var(--green)}
-        .terminal-label{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0)}
-        .terminal-body{padding:24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;text-align:left}
-        .terminal-body pre{margin:0;white-space:pre-wrap;word-wrap:break-word}
-        .t-g{color:var(--green)}.t-b{color:var(--accent1)}.t-m{color:var(--sub0)}.t-p{color:var(--peach)}.t-y{color:var(--yellow)}
+/* ─── Modular grid layout ─────────────────────── */
+.grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--sf1);
+}
+.cell{
+  padding:48px 32px;border-right:1px solid var(--sf1);position:relative;
+}
+.cell:last-child{border-right:none}
+.cell.full{grid-column:1/-1;border-right:none}
+.cell-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:24px;padding-bottom:14px;
+  border-bottom:1px dashed var(--sf1);
+}
+.cell-num{
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;
+  color:var(--accent);letter-spacing:0.15em;font-weight:700;
+}
+.cell-name{
+  font-family:'Inter',sans-serif;font-size:13px;color:var(--ov2);
+  letter-spacing:0.2em;text-transform:uppercase;font-weight:500;
+}
+.cell h2{
+  font-size:36px;line-height:1.05;font-weight:700;
+  letter-spacing:-0.025em;margin-bottom:16px;
+}
+.cell h2 mark{background:var(--accent);color:var(--crust);padding:0 6px;font-style:normal}
+.cell p{color:var(--sub0);font-size:16px;line-height:1.65;margin-bottom:14px}
+.cell p strong{color:var(--text);font-weight:600}
+.cell p code{
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:13px;
+  background:var(--mantle);padding:2px 7px;border-radius:3px;color:var(--green);
+}
 
-        /* ── Stats ── */
-        .stats{display:flex;justify-content:center;gap:40px;padding:60px 0;position:relative}
-        .stat{text-align:center}
-        .stat-num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--accent1);line-height:1}
-        .stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sf2);margin-top:6px;letter-spacing:2px;text-transform:uppercase}
-        .stat-div{width:1px;height:48px;background:var(--sf0);align-self:center}
+/* Spec table — KEY → VALUE */
+.feat{
+  display:grid;grid-template-columns:auto 1fr;
+  gap:18px 24px;margin-top:24px;
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:13px;
+}
+.feat .k{color:var(--accent);font-weight:700;letter-spacing:0.05em}
+.feat .v{color:var(--sub1);line-height:1.65}
+.feat .v b{color:var(--text);font-weight:600}
 
-        /* ── Sections ── */
-        section{padding:80px 0}
-        .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent1);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
-        .section-title{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:12px;letter-spacing:-.02em}
-        .section-desc{font-size:15px;color:var(--ov0);margin-bottom:48px;max-width:620px}
-        .gradient-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin:0 auto;max-width:600px}
+/* Code block */
+pre.code{
+  background:var(--mantle);border:1px solid var(--text);
+  border-left:6px solid var(--accent);padding:20px 24px;
+  font-family:'JetBrains Mono','SF Mono',monospace;
+  font-size:13px;line-height:1.85;color:var(--sub1);
+  overflow-x:auto;margin-top:20px;
+}
+pre.code .c{color:var(--ov0)}
+pre.code .k{color:var(--mauve);font-weight:500}
+pre.code .s{color:var(--green)}
+pre.code .p{color:var(--peach)}
+pre.code .v{color:var(--blue)}
 
-        /* ── Bento ── */
-        .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-        .bento-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:all .25s;position:relative;overflow:hidden}
-        .bento-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent1),var(--accent2));opacity:0;transition:opacity .25s}
-        .bento-card:hover{transform:translateY(-3px);border-color:var(--sf1);box-shadow:0 12px 32px rgba(0,0,0,0.25),0 0 20px rgba(var(--accentrgb),0.06)}
-        .bento-card:hover::before{opacity:1}
-        .bento-hero{grid-column:span 2}
-        .bento-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--accent1);margin-bottom:8px}
-        .bento-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
-        .bento-card .mini-terminal{background:var(--crust);border-radius:8px;padding:14px;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;text-align:left}
-        .bento-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-        .bento-stat .big{font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:var(--accent1)}
-        .bento-stat .label{font-size:12px;color:var(--sf2);margin-top:4px;letter-spacing:1px}
+/* Reference / --help block */
+.ref{
+  background:var(--mantle);border:1px solid var(--sf0);
+  padding:24px 28px;font-family:'JetBrains Mono','SF Mono',monospace;
+  font-size:13px;line-height:1.85;color:var(--sub1);
+  overflow-x:auto;margin-top:20px;border-radius:0;
+}
+.ref h4{
+  font-size:10px;color:var(--ov0);letter-spacing:0.18em;
+  text-transform:uppercase;font-weight:600;margin:14px 0 8px;
+}
+.ref h4:first-child{margin-top:0}
+.ref code{color:var(--mauve);font-weight:500;display:inline-block;width:170px}
+.ref .desc{color:var(--sub1)}
+.ref .env{color:var(--peach);font-weight:500;display:inline-block;width:170px}
 
-        /* ── Pills ── */
-        .pill-group{margin-bottom:20px}
-        .pill-group-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
-        .pills{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-        .pill{background:var(--mantle);border:1px solid;border-radius:20px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;gap:8px;transition:all .2s}
-        .pill:hover{background:var(--base);filter:brightness(1.25)}
-        .pill .alias{opacity:.55;font-size:11px;margin-left:auto}
-        .pill-group[data-accent="green"]   .pill-group-label,
-        .pill-group[data-accent="green"]   .pill{color:var(--green);border-color:rgba(166,227,161,.35)}
-        .pill-group[data-accent="peach"]   .pill-group-label,
-        .pill-group[data-accent="peach"]   .pill{color:var(--peach);border-color:rgba(250,179,135,.35)}
-        .pill-group[data-accent="cyan"]    .pill-group-label,
-        .pill-group[data-accent="cyan"]    .pill{color:var(--sapphire);border-color:rgba(116,199,236,.35)}
-        .pill-group[data-accent="mauve"]   .pill-group-label,
-        .pill-group[data-accent="mauve"]   .pill{color:var(--mauve);border-color:rgba(203,166,247,.35)}
-        .pill-group[data-accent="teal"]    .pill-group-label,
-        .pill-group[data-accent="teal"]    .pill{color:var(--teal);border-color:rgba(148,226,213,.35)}
-        .pill-group[data-accent="yellow"]  .pill-group-label,
-        .pill-group[data-accent="yellow"]  .pill{color:var(--yellow);border-color:rgba(249,226,175,.35)}
-        .pill-group[data-accent="red"]     .pill-group-label,
-        .pill-group[data-accent="red"]     .pill{color:var(--red);border-color:rgba(243,139,168,.35)}
-        .pill-group[data-accent="lavender"] .pill-group-label,
-        .pill-group[data-accent="lavender"] .pill{color:var(--lavender);border-color:rgba(180,190,254,.35)}
-        .pill-group[data-accent="blue"]    .pill-group-label,
-        .pill-group[data-accent="blue"]    .pill{color:var(--blue);border-color:rgba(137,180,250,.35)}
-        .pill-group[data-accent="pink"]    .pill-group-label,
-        .pill-group[data-accent="pink"]    .pill{color:var(--pink);border-color:rgba(245,194,231,.35)}
+/* Family table */
+.family{
+  width:100%;border-collapse:collapse;margin-top:20px;
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:12px;
+}
+.family th,.family td{
+  padding:10px 12px;text-align:left;border-bottom:1px solid var(--sf0);
+  vertical-align:top;
+}
+.family th{
+  font-size:10px;color:var(--ov0);letter-spacing:0.18em;
+  text-transform:uppercase;font-weight:600;
+}
+.family td a{color:var(--accent);font-weight:600;border-bottom:1px solid currentColor}
+.family td.lang{color:var(--mauve);font-weight:600}
+.family td.size{color:var(--text);font-weight:600}
+.family td.note{color:var(--sub1)}
+.family tr.me td{background:rgba(249,226,175,0.05)}
+.family tr.me td a{color:var(--accent)}
 
-        /* ── Family table ── */
-        .family-table{width:100%;border-collapse:collapse;background:var(--mantle);border-radius:12px;overflow:hidden;border:1px solid var(--sf0);font-size:14px}
-        .family-table th{padding:14px 18px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;background:var(--crust);border-bottom:1px solid var(--sf0)}
-        .family-table td{padding:16px 18px;border-bottom:1px solid var(--sf0);color:var(--sub0)}
-        .family-table tr:last-child td{border-bottom:none}
-        .family-table tr.highlight td{background:rgba(var(--accentrgb),0.06)}
-        .family-table .tool-name{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent1);font-size:14px}
-        .family-table .tool-name.muted{color:var(--ov2)}
-        .family-table .lang-tag{display:inline-block;padding:3px 10px;border-radius:11px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;background:var(--sf0);color:var(--text)}
-        .family-table a{color:var(--accent1);text-decoration:none}
-        .family-table a:hover{text-decoration:underline}
+/* Big call to action band */
+.band{
+  background:var(--text);color:var(--crust);
+  padding:48px 32px;border-bottom:1px solid var(--text);
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:32px;
+}
+.band-tag{
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;
+  letter-spacing:0.2em;text-transform:uppercase;font-weight:600;
+}
+.band h3{
+  font-family:'Inter',sans-serif;font-weight:700;
+  font-size:32px;line-height:1.1;letter-spacing:-0.02em;
+}
+.band a.cta{
+  background:var(--crust);color:var(--text);
+  padding:16px 28px;font-family:'JetBrains Mono','SF Mono',monospace;
+  font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  border:1px solid var(--crust);transition:all 0.15s;white-space:nowrap;
+}
+.band a.cta:hover{background:var(--accent);color:var(--crust);border-color:var(--accent)}
 
-        /* ── Arch ── */
-        .arch-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-        .arch-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:border-color .2s}
-        .arch-card:hover{border-color:var(--sf1)}
-        .arch-num{display:inline-flex;width:30px;height:30px;background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:14px}
-        .arch-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--teal);margin-bottom:8px}
-        .arch-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
+/* Footer */
+footer{
+  padding:32px 24px;display:flex;justify-content:space-between;
+  font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;
+  color:var(--ov0);letter-spacing:0.1em;text-transform:uppercase;flex-wrap:wrap;gap:16px;
+}
+footer a{color:var(--ov2);border-bottom:1px solid var(--sf0);transition:all .15s}
+footer a:hover{color:var(--text);border-bottom-color:var(--text)}
 
-        /* ── Two Col ── */
-        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-
-        /* ── Footer ── */
-        footer{padding:48px 0;margin-top:40px}
-        .footer-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin-bottom:48px}
-        .footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
-        .footer-grid h4{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);margin-bottom:14px;letter-spacing:2px;text-transform:uppercase}
-        .footer-grid ul{list-style:none}
-        .footer-grid li{margin-bottom:8px}
-        .footer-grid a{color:var(--ov2);text-decoration:none;font-size:13px;transition:color .2s}
-        .footer-grid a:hover{color:var(--accent1)}
-        .footer-grid p{font-size:13px;color:var(--ov1);line-height:1.7}
-        .footer-bottom{text-align:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--sf0);font-size:12px;color:var(--ov0)}
-
-        /* ── Animate ── */
-        .animate{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
-        .animate.visible{opacity:1;transform:translateY(0)}
-        .animate-scale{opacity:0;transform:translateY(24px) scale(.97);transition:opacity .8s ease,transform .8s ease}
-        .animate-scale.visible{opacity:1;transform:translateY(0) scale(1)}
-
-        /* ── Responsive ── */
-        @media(max-width:960px){.bento{grid-template-columns:1fr 1fr}.bento-hero{grid-column:span 2}.two-col,.arch-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(2,1fr)}.stats{flex-wrap:wrap;gap:24px}.family-table{font-size:13px}.family-table td,.family-table th{padding:12px 12px}}
-        @media(max-width:600px){.container{padding:0 16px}.hero{padding:100px 0 48px}.bento{grid-template-columns:1fr}.bento-hero{grid-column:span 1}.stats{gap:16px}.stat-div{display:none}.nav-links a:not(.nav-cta){display:none}.footer-grid{grid-template-columns:1fr}.pills{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.family-table{font-size:12px}}
-
-        a:focus-visible{outline:2px solid var(--accent1);outline-offset:2px}
-    </style>
+@media (max-width:760px){
+  .hero h1{font-size:64px}
+  .hero-grid{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr}
+  .cell{border-right:none;border-bottom:1px solid var(--sf1)}
+  .cell:last-child{border-bottom:none}
+  .band{grid-template-columns:1fr;text-align:left}
+  .status{font-size:10px;padding:10px 14px}
+  .status .left,.status .right{gap:14px}
+  .family th:nth-child(4),.family td:nth-child(4){display:none}
+}
+</style>
 </head>
 <body>
 
-    <!-- Nav -->
-    <nav class="nav"><div class="nav-inner">
-        <a href="#" class="nav-logo">staysail</a>
-        <div class="nav-links">
-            <a href="#family">Family</a>
-            <a href="#features">Features</a>
-            <a href="#applets">Applets</a>
-            <a href="#architecture">Architecture</a>
-            <a href="https://github.com/Real-Fruit-Snacks/Staysail">GitHub</a>
-            <a href="https://github.com/Real-Fruit-Snacks/Staysail/releases/latest" class="nav-cta">Download</a>
-        </div>
-    </div></nav>
+<div class="status">
+  <div class="left">
+    <span><b>STAYSAIL</b></span>
+    <span><span class="dot"></span>STATUS · 8 BUILDS · CI</span>
+    <span>ZIG 0.16+</span>
+  </div>
+  <div class="right">
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail">REPO</a>
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail/releases/latest">DOWNLOAD</a>
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/LICENSE">MIT</a>
+  </div>
+</div>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-logo animate"><img src="assets/logo-dark.svg" alt="staysail"></div>
-            <h1 class="hero-tagline animate" style="transition-delay:.1s">Unix utilities, in one Zig binary, anywhere.</h1>
-            <p class="hero-desc animate" style="transition-delay:.2s">A BusyBox-style multi-call binary in Zig — 84 Unix utilities, one ~1 MB statically-linked executable. Cross-compile every target from one host.</p>
-            <div class="hero-ctas animate" style="transition-delay:.3s">
-                <a href="https://github.com/Real-Fruit-Snacks/Staysail/releases/latest" class="btn-primary">Download Latest</a>
-                <a href="https://github.com/Real-Fruit-Snacks/Staysail" class="btn-secondary">View Source</a>
-            </div>
-            <div class="terminal animate-scale" style="transition-delay:.4s">
-                <div class="terminal-bar">
-                    <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
-                    <span class="terminal-label">staysail</span>
-                </div>
-                <div class="terminal-body"><pre><span class="t-g">$</span> staysail seq 100 | staysail sort -rn | staysail head -3
-<span class="t-y">100
-99
-98</span>
-
-<span class="t-g">$</span> staysail find . -name '*.zig' -size +1k -mtime -7
-<span class="t-m">./src/main.zig
-./src/applets/awk.zig
-./src/applets/jq.zig</span>
-
-<span class="t-g">$</span> staysail tar -czf src.tgz src/ --exclude='*_test.zig'
-<span class="t-g">$</span> staysail sha256sum src.tgz
-<span class="t-b">4f2a8b1c3e7d… *src.tgz</span></pre></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats -->
-    <div class="container">
-        <div class="stats animate">
-            <div class="stat"><div class="stat-num" data-target="84">0</div><div class="stat-label">Applets</div></div>
-            <div class="stat-div"></div>
-            <div class="stat"><div class="stat-num" data-target="87">0</div><div class="stat-label">Smoke Tests</div></div>
-            <div class="stat-div"></div>
-            <div class="stat"><div class="stat-num" data-target="1" data-suffix="MB">0</div><div class="stat-label">Binary</div></div>
-            <div class="stat-div"></div>
-            <div class="stat"><div class="stat-num" data-target="8">0</div><div class="stat-label">Targets</div></div>
-            <div class="stat-div"></div>
-            <div class="stat"><div class="stat-num" data-target="0" data-prefix="" data-suffix=" deps">0</div><div class="stat-label">Runtime</div></div>
-        </div>
-        <div class="gradient-line"></div>
+<section class="hero">
+  <div class="hero-inner">
+    <span class="pop">Real-Fruit-Snacks &nbsp;//&nbsp; multi-call binary &nbsp;//&nbsp; one zig build, every target</span>
+    <h1>STAYSAIL<span class="dot">.</span></h1>
+    <div class="hero-grid">
+      <div>
+        <div class="label">binary</div>
+        <div class="value">~1<span class="unit"> MB STATIC</span></div>
+      </div>
+      <div>
+        <div class="label">applets</div>
+        <div class="value">84<span class="unit"> × POSIX</span></div>
+      </div>
+      <div>
+        <div class="label">targets</div>
+        <div class="value">8<span class="unit"> × NATIVE</span></div>
+      </div>
+      <div>
+        <div class="label">stack</div>
+        <div class="value">Zig<span class="unit"> 0.16+</span></div>
+      </div>
     </div>
+  </div>
+</section>
 
-    <!-- Family -->
-    <section id="family">
-        <div class="container">
-            <div class="section-label animate">A SAIL-THEMED QUINTET</div>
-            <h2 class="section-title animate" style="transition-delay:.08s">Same idea, five tradeoffs</h2>
-            <p class="section-desc animate" style="transition-delay:.16s">BusyBox-style single-binary shell toolkits across five languages. Each one occupies a different point on the size, portability, and runtime curve. <strong>staysail</strong> is the smallest realistic native build — no interpreter, no runtime.</p>
+<div class="grid">
+  <div class="cell">
+    <div class="cell-header">
+      <span class="cell-num">01</span>
+      <span class="cell-name">Premise</span>
+    </div>
+    <h2>The <mark>fully-static</mark> Zig sibling of mainsail.</h2>
+    <p><a href="https://github.com/Real-Fruit-Snacks/mainsail" style="color:var(--accent);border-bottom:1px solid currentColor">mainsail</a> is the Python reference — easy to embed, easy to read. Its README documents three things it can't do: <strong>no fully-static Linux binary, no <code>linux-arm64-musl</code>, no <code>macos-x64</code></strong>.</p>
+    <p>Staysail fills those gaps. <code>zig build -Dtarget=x86_64-linux-musl</code> produces a self-contained binary that runs in <code>distroless/static</code>, on Alpine, anywhere with a kernel. Same applet roster, same flags, same exit codes. Different runtime story.</p>
+  </div>
 
-            <div class="animate" style="transition-delay:.24s">
-                <table class="family-table">
-                    <thead>
-                        <tr><th>Tool</th><th>What it does</th><th>Language</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><a href="https://github.com/Real-Fruit-Snacks/rill" class="tool-name muted">rill</a></td>
-                            <td>Pure x86_64 NASM — 41 utilities, ~34 KB static ELF, direct syscalls, no libc, no runtime.</td>
-                            <td><span class="lang-tag" style="background:rgba(110,76,19,.4);color:#fab387">ASM</span></td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://github.com/Real-Fruit-Snacks/moonraker" class="tool-name muted">moonraker</a></td>
-                            <td>Lua via <code>luastatic</code> — 81 utilities, ~1.2 MB static binary with embedded Lua VM.</td>
-                            <td><span class="lang-tag" style="background:rgba(44,45,114,.5);color:#b4befe">Lua</span></td>
-                        </tr>
-                        <tr class="highlight">
-                            <td class="tool-name">staysail</td>
-                            <td>Zig via <code>zig build</code> — 84 utilities, ~1 MB statically-linked, smallest realistic native build. <em>This one.</em></td>
-                            <td><span class="lang-tag" style="background:rgba(247,164,29,.25);color:#f9e2af">Zig</span></td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://github.com/Real-Fruit-Snacks/jib" class="tool-name muted">jib</a></td>
-                            <td>Rust via Cargo — 73 utilities + jq/http/dig, ~2.4 MB avg across 11 platform builds.</td>
-                            <td><span class="lang-tag" style="background:rgba(222,165,132,.25);color:#fab387">Rust</span></td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://github.com/Real-Fruit-Snacks/topsail" class="tool-name muted">topsail</a></td>
-                            <td>Single-file Go binary — 84 utilities, ~3.4 MB per platform, plus .deb / .rpm / .apk packages.</td>
-                            <td><span class="lang-tag" style="background:rgba(0,173,216,.25);color:#74c7ec">Go</span></td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://github.com/Real-Fruit-Snacks/mainsail" class="tool-name muted">mainsail</a></td>
-                            <td>Python via Nuitka — 84 utilities, ~5.5 MB native (or ~110 KB <code>.pyz</code> with system Python).</td>
-                            <td><span class="lang-tag" style="background:rgba(55,118,171,.4);color:#89b4fa">Python</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+  <div class="cell">
+    <div class="cell-header">
+      <span class="cell-num">02</span>
+      <span class="cell-name">Specs</span>
+    </div>
+    <h2>What's in the box.</h2>
+    <div class="feat">
+      <div class="k">BINARY</div><div class="v">One <b>~1 MB static executable</b> · no interpreter · no shared libs · no deps.</div>
+      <div class="k">APPLETS</div><div class="v"><b>84 POSIX utilities</b> — text · files · hashing · archives · network · JSON.</div>
+      <div class="k">TARGETS</div><div class="v"><b>8 native builds</b> — Linux glibc/musl · Windows · macOS · x86_64 + ARM64.</div>
+      <div class="k">BUILDS</div><div class="v">Cross-compile every target from one host · <code>-Dpreset=full/slim/minimal</code>.</div>
+      <div class="k">TESTS</div><div class="v"><code>zig build test</code> ~10ms unit · 87 integration assertions in bats.</div>
+      <div class="k">STACK</div><div class="v">Zig <b>0.16+</b> · <code>std.process.Init</code> · comptime applet registry.</div>
+    </div>
+  </div>
+</div>
 
-    <!-- Features Bento -->
-    <section id="features" style="background:var(--mantle)">
-        <div class="container">
-            <div class="section-label animate">FEATURES</div>
-            <h2 class="section-title animate" style="transition-delay:.08s">Everything you reach for, in one place</h2>
-            <p class="section-desc animate" style="transition-delay:.16s">A familiar POSIX surface. Real flag coverage, not stubs. One static binary that runs unchanged on glibc, musl/Alpine, distroless, and scratch.</p>
+<div class="grid">
+  <div class="cell full">
+    <div class="cell-header">
+      <span class="cell-num">03</span>
+      <span class="cell-name">Quickstart</span>
+    </div>
+    <h2>Download, build, dispatch.</h2>
+    <p>From a release no Zig is required. From source: <code>zig build</code> for the full 84-applet binary, or trim with a preset.</p>
+<pre class="code"><span class="c"># From a release — no Zig required</span>
+$ <span class="k">curl</span> -LO https://github.com/Real-Fruit-Snacks/Staysail/releases/latest/download/staysail-linux-x64
+$ <span class="k">chmod</span> +x staysail-linux-x64 <span class="p">&amp;&amp;</span> ./staysail-linux-x64 --list
 
-            <div class="bento">
-                <div class="bento-card bento-hero animate" style="transition-delay:.1s">
-                    <h3>One Static Binary, 84 Utilities</h3>
-                    <p>Every common shell tool dispatched through a single executable — POSIX coreutils plus <code>jq</code>, <code>http</code> (TLS), <code>dig</code>, <code>nc</code>, archives, hashing, and the BusyBox parity gap-fillers. Symlink to any applet name and dispatch becomes transparent.</p>
-                    <div class="mini-terminal"><span class="t-g">$</span> staysail --list | wc -l<br><span class="t-b">84</span><br><span class="t-g">$</span> ln -s staysail cat && ./cat README.md</div>
-                </div>
-                <div class="bento-card bento-stat animate" style="transition-delay:.18s">
-                    <div class="big">~1<span style="font-size:24px">MB</span></div>
-                    <div class="label">Static Binary</div>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.2s">
-                    <h3 style="color:var(--mauve)">Cross-Compile From Any Host</h3>
-                    <p><code>zig build -Dtarget=x86_64-linux-musl</code> from Windows just works. Eight release targets — Linux glibc/musl × x64/arm64, Windows × x64/arm64, macOS × x64/arm64 — built from a single CI job.</p>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.28s">
-                    <h3 style="color:var(--green)">Comptime Applet Pruning</h3>
-                    <p><code>-Dapplets=cat,grep,sed</code> compiles only those three. The comptime registry never references the others, so the linker drops them entirely. A 4-applet build is well under 100 KB.</p>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.36s">
-                    <h3 style="color:var(--peach)">Microsecond Startup</h3>
-                    <p>No interpreter cold-start. Pipelines that spawn 1000 instances feel native. <code>tail -f</code>, <code>xargs -0</code>, binary-safe streams through every text utility.</p>
-                </div>
-                <div class="bento-card bento-stat animate" style="transition-delay:.1s">
-                    <div class="big" style="color:var(--teal)">87</div>
-                    <div class="label">Smoke Tests</div>
-                </div>
-                <div class="bento-card bento-hero animate" style="transition-delay:.18s">
-                    <h3 style="color:var(--red)">Real Heavy Hitters</h3>
-                    <p><code>find</code> with full predicate tree (<code>-and</code>/<code>-or</code>/<code>!</code>/<code>-exec</code>). <code>grep</code> and <code>sed</code> with full POSIX ERE via the in-tree regex engine. <code>awk</code> with BEGIN/END, regex patterns, variable assignment. <code>jq</code> with constructors, <code>if/then/else</code>, 16+ builtins.</p>
-                    <div class="mini-terminal"><span class="t-g">$</span> staysail jq -r '.users<br>&nbsp;&nbsp;| map(select(.age &gt; 30))<br>&nbsp;&nbsp;| sort_by(.name)<br>&nbsp;&nbsp;| .[] | "\(.name)\t\(.age)"' users.json</div>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.26s">
-                    <h3 style="color:var(--yellow)">Hackable</h3>
-                    <p>One file per applet — most are under 200 lines. Add a new one by dropping <code>src/applets/&lt;name&gt;.zig</code> with the four-symbol contract: <code>name</code>, <code>aliases</code>, <code>help</code>, <code>run(ctx, args)</code>.</p>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.34s">
-                    <h3 style="color:var(--accent1)">Lifecycle Built-In</h3>
-                    <p><code>install-aliases</code> symlinks every applet to a target dir. <code>completions bash|zsh|fish|powershell</code> emits shell completions. <code>update</code> self-replaces from the latest GitHub release atomically.</p>
-                </div>
-                <div class="bento-card animate" style="transition-delay:.42s">
-                    <h3 style="color:var(--mauve)">Eight Native Targets</h3>
-                    <p>Linux × x86_64 / ARM64 (glibc + musl), macOS × Intel / Apple Silicon, Windows × x86_64 / ARM64. Cross-compiled from one host, no per-OS runners required.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<span class="c"># From source — Zig 0.16+</span>
+$ <span class="k">git clone</span> https://github.com/Real-Fruit-Snacks/Staysail <span class="p">&amp;&amp;</span> <span class="k">cd</span> Staysail
+$ <span class="k">zig build</span> -Doptimize=<span class="v">ReleaseSmall</span>
+$ ./zig-out/bin/staysail --list
 
-    <!-- Applets -->
-    <section id="applets">
-        <div class="container">
-            <div class="section-label animate">APPLETS</div>
-            <h2 class="section-title animate" style="transition-delay:.08s">All 84, organized</h2>
-            <p class="section-desc animate" style="transition-delay:.16s">Each applet implements common POSIX flags. Run <code>staysail &lt;applet&gt; --help</code> for per-applet usage.</p>
+<span class="c"># Wire up multi-call dispatch so each applet runs by its own name</span>
+$ <span class="k">ln</span> -s staysail cat                         <span class="c"># Unix</span>
+$ <span class="k">copy</span> staysail.exe cat.exe                  <span class="c">:: Windows</span>
+$ ./cat README.md                            <span class="c"># dispatches to the cat applet</span>
 
-            <div class="pill-group animate" data-accent="green">
-                <div class="pill-group-label">Foundation</div>
-                <div class="pills">
-                    <div class="pill">cat<span class="alias">type</span></div>
-                    <div class="pill">echo</div>
-                    <div class="pill">true</div>
-                    <div class="pill">false</div>
-                    <div class="pill">yes</div>
-                    <div class="pill">printf</div>
-                    <div class="pill">pwd</div>
-                    <div class="pill">basename</div>
-                    <div class="pill">dirname</div>
-                    <div class="pill">mkdir</div>
-                    <div class="pill">touch</div>
-                    <div class="pill">mv</div>
-                    <div class="pill">cp<span class="alias">copy</span></div>
-                    <div class="pill">rm<span class="alias">del</span></div>
-                </div>
-            </div>
+<span class="c"># Or have staysail do it for every applet at once</span>
+$ staysail install-aliases ~/.local/bin
 
-            <div class="pill-group animate" style="transition-delay:.06s" data-accent="peach">
-                <div class="pill-group-label">POSIX text</div>
-                <div class="pills">
-                    <div class="pill">head</div>
-                    <div class="pill">tail</div>
-                    <div class="pill">wc</div>
-                    <div class="pill">tee</div>
-                    <div class="pill">tac</div>
-                    <div class="pill">rev</div>
-                    <div class="pill">tr</div>
-                    <div class="pill">cut</div>
-                    <div class="pill">sort</div>
-                    <div class="pill">uniq</div>
-                    <div class="pill">seq</div>
-                    <div class="pill">sleep</div>
-                    <div class="pill">expand</div>
-                    <div class="pill">unexpand</div>
-                    <div class="pill">nl</div>
-                    <div class="pill">paste</div>
-                    <div class="pill">fold</div>
-                    <div class="pill">split</div>
-                    <div class="pill">comm</div>
-                    <div class="pill">join</div>
-                    <div class="pill">column</div>
-                </div>
-            </div>
+<span class="c"># Pick exactly the applets you need</span>
+$ <span class="k">zig build</span> -Dpreset=<span class="v">full</span>                    <span class="c"># 84 applets (default)</span>
+$ <span class="k">zig build</span> -Dapplets=<span class="s">ls,cat,grep,sed,awk</span>     <span class="c"># hand-picked → &lt; 100 KB</span></pre>
+  </div>
+</div>
 
-            <div class="pill-group animate" style="transition-delay:.09s" data-accent="red">
-                <div class="pill-group-label">Heavy text</div>
-                <div class="pills">
-                    <div class="pill">grep</div>
-                    <div class="pill">sed</div>
-                    <div class="pill">awk</div>
-                    <div class="pill">find</div>
-                </div>
-            </div>
+<div class="grid">
+  <div class="cell full">
+    <div class="cell-header">
+      <span class="cell-num">04</span>
+      <span class="cell-name">Reference</span>
+    </div>
+    <h2>The applet surface.</h2>
+    <p>84 utilities organised by category. Every applet implements common POSIX flags. Per-applet caveats live in <a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/PARITY.md" style="color:var(--accent);border-bottom:1px solid currentColor"><code>docs/PARITY.md</code></a>.</p>
+<div class="ref">
+<h4>FOUNDATION</h4>
+<div><code>cat · echo · printf</code><span class="desc">Foundational text / output</span></div>
+<div><code>true · false · yes</code><span class="desc">Exit-status / fill helpers</span></div>
+<div><code>pwd · basename · dirname</code><span class="desc">Path components</span></div>
+<div><code>mkdir · touch · mv · cp · rm</code><span class="desc">Filesystem mutation</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.12s" data-accent="cyan">
-                <div class="pill-group-label">JSON &amp; data</div>
-                <div class="pills">
-                    <div class="pill">jq</div>
-                </div>
-            </div>
+<h4>TEXT</h4>
+<div><code>head · tail · wc · tee</code><span class="desc">Stream slicing &amp; counting</span></div>
+<div><code>tac · rev · tr · cut</code><span class="desc">Reverse / transform</span></div>
+<div><code>sort · uniq · seq · sleep</code><span class="desc">Order / sequence / time</span></div>
+<div><code>expand · unexpand · nl · paste</code><span class="desc">Indentation &amp; numbering</span></div>
+<div><code>fold · split · comm · join · column</code><span class="desc">Wrapping &amp; tabular</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.15s" data-accent="mauve">
-                <div class="pill-group-label">Network</div>
-                <div class="pills">
-                    <div class="pill">http</div>
-                    <div class="pill">dig</div>
-                    <div class="pill">nc</div>
-                </div>
-            </div>
+<h4>HEAVY TEXT &nbsp;<span style="color:var(--ov0)">// real engines, not stubs</span></h4>
+<div><code>grep</code><span class="desc">POSIX ERE · -F · -i · -v · -n · -c · -H · -h</span></div>
+<div><code>sed</code><span class="desc">s/regex/repl/[g][i] · d · p · q · = · -n · -i · -e</span></div>
+<div><code>awk</code><span class="desc">BEGIN/END · regex · expressions · $0..$NF · NR/NF/FS/OFS/ORS</span></div>
+<div><code>find</code><span class="desc">-exec · -name · -type · -size · -mtime · ! · -a · -o · -delete</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.18s" data-accent="teal">
-                <div class="pill-group-label">Hashing &amp; integrity</div>
-                <div class="pills">
-                    <div class="pill">md5sum</div>
-                    <div class="pill">sha1sum</div>
-                    <div class="pill">sha256sum</div>
-                    <div class="pill">sha512sum</div>
-                </div>
-            </div>
+<h4>FILESYSTEM</h4>
+<div><code>ls · stat · du · df</code><span class="desc">Listing &amp; stat</span></div>
+<div><code>chmod · which · xargs</code><span class="desc">Mode · path lookup · arg builder</span></div>
+<div><code>realpath · truncate · mktemp · ln · dd</code><span class="desc">Path · size · scratch · link · copy</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.21s" data-accent="yellow">
-                <div class="pill-group-label">Archives &amp; compression</div>
-                <div class="pills">
-                    <div class="pill">tar</div>
-                    <div class="pill">gzip</div>
-                    <div class="pill">gunzip</div>
-                    <div class="pill">zip</div>
-                    <div class="pill">unzip</div>
-                </div>
-            </div>
+<h4>HASHING &amp; ENCODING</h4>
+<div><code>md5sum · sha1/256/512sum</code><span class="desc">Identical SHA-256 of "abc" everywhere</span></div>
+<div><code>base64 · od · hexdump</code><span class="desc">Binary inspection</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.24s" data-accent="blue">
-                <div class="pill-group-label">Encoding</div>
-                <div class="pills">
-                    <div class="pill">base64</div>
-                    <div class="pill">od</div>
-                    <div class="pill">hexdump</div>
-                </div>
-            </div>
+<h4>ARCHIVES</h4>
+<div><code>tar · gzip · gunzip</code><span class="desc">create · extract · list · gz filter · BSD short + long</span></div>
+<div><code>zip · unzip</code><span class="desc">Reads deflate · writes store</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.27s" data-accent="lavender">
-                <div class="pill-group-label">Filesystem &amp; paths</div>
-                <div class="pills">
-                    <div class="pill">ls<span class="alias">dir</span></div>
-                    <div class="pill">stat</div>
-                    <div class="pill">du</div>
-                    <div class="pill">df</div>
-                    <div class="pill">chmod</div>
-                    <div class="pill">which</div>
-                    <div class="pill">xargs</div>
-                    <div class="pill">realpath</div>
-                    <div class="pill">truncate</div>
-                    <div class="pill">mktemp</div>
-                    <div class="pill">ln</div>
-                    <div class="pill">dd</div>
-                </div>
-            </div>
+<h4>NETWORK &amp; JSON</h4>
+<div><code>http</code><span class="desc">curl-style: GET/POST/PUT/DELETE/HEAD/PATCH · -H · -d · -j · TLS</span></div>
+<div><code>dig · nc</code><span class="desc">UDP DNS (A/AAAA/MX/TXT/CNAME/NS/PTR) · TCP connect+listen+scan</span></div>
+<div><code>jq</code><span class="desc">16 builtins · pipes · constructors · if-then-else · -r/-c/-s</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.30s" data-accent="pink">
-                <div class="pill-group-label">System &amp; process</div>
-                <div class="pills">
-                    <div class="pill">uname</div>
-                    <div class="pill">hostname</div>
-                    <div class="pill">whoami</div>
-                    <div class="pill">id</div>
-                    <div class="pill">groups</div>
-                    <div class="pill">env</div>
-                    <div class="pill">date</div>
-                    <div class="pill">uuidgen</div>
-                    <div class="pill">getopt</div>
-                    <div class="pill">timeout</div>
-                    <div class="pill">watch</div>
-                    <div class="pill">cmp</div>
-                    <div class="pill">diff</div>
-                    <div class="pill">fmt</div>
-                </div>
-            </div>
+<h4>SYSTEM</h4>
+<div><code>uname · whoami · hostname</code><span class="desc">Identity</span></div>
+<div><code>id · groups · env · date</code><span class="desc">Context</span></div>
+<div><code>uuidgen · getopt · timeout · watch</code><span class="desc">Helpers</span></div>
+<div><code>cmp · diff · fmt</code><span class="desc">Compare &amp; format</span></div>
 
-            <div class="pill-group animate" style="transition-delay:.33s" data-accent="green">
-                <div class="pill-group-label">Lifecycle</div>
-                <div class="pills">
-                    <div class="pill">install-aliases</div>
-                    <div class="pill">completions</div>
-                    <div class="pill">update</div>
-                </div>
-            </div>
-        </div>
-    </section>
+<h4>LIFECYCLE</h4>
+<div><code>install-aliases</code><span class="desc">Symlink/hardlink/copy applets into a target dir</span></div>
+<div><code>completions</code><span class="desc">bash / zsh / fish / powershell</span></div>
+<div><code>update</code><span class="desc">Atomic self-update from GitHub releases</span></div>
 
-    <!-- Architecture -->
-    <section id="architecture" style="background:var(--mantle)">
-        <div class="container">
-            <div class="section-label animate">ARCHITECTURE</div>
-            <h2 class="section-title animate" style="transition-delay:.08s">Four-layer dispatch</h2>
-            <p class="section-desc animate" style="transition-delay:.16s">Clean separation between entry point, dispatch logic, comptime registry, and per-applet implementations. Adding an applet is a one-file change plus two registry entries.</p>
-            <div class="arch-grid">
-                <div class="arch-card animate" style="transition-delay:.1s">
-                    <div class="arch-num">1</div>
-                    <h3>Entry</h3>
-                    <p><code>src/main.zig</code> receives Zig 0.16's <code>std.process.Init</code>, sets up streaming stdio and an arena allocator, hands off to <code>dispatch</code>. Same path whether invoked directly, via <code>staysail &lt;applet&gt;</code>, or through a symlink.</p>
-                </div>
-                <div class="arch-card animate" style="transition-delay:.2s">
-                    <div class="arch-num">2</div>
-                    <h3>Dispatch</h3>
-                    <p>Strip <code>.exe</code> from <code>argv[0]</code> basename, look it up in the registry. Unknown invocations fall through to subcommand mode (<code>staysail &lt;applet&gt; [args]</code>). <code>--help</code> intercepted long-form only — <code>-h</code> stays free for applet flags like <code>df -h</code>.</p>
-                </div>
-                <div class="arch-card animate" style="transition-delay:.3s">
-                    <div class="arch-num">3</div>
-                    <h3>Registry (comptime)</h3>
-                    <p><code>src/registry.zig</code> walks <code>applets/all.zig</code> at compile time, filters by the <code>active_applets</code> build option, produces a flat <code>[]const Applet</code>. Excluded applets are <em>not referenced</em>, so the linker drops them entirely.</p>
-                </div>
-                <div class="arch-card animate" style="transition-delay:.4s">
-                    <div class="arch-num">4</div>
-                    <h3>Applets</h3>
-                    <p>One file per applet under <code>src/applets/</code>, each exporting <code>name</code>, <code>aliases</code>, <code>help</code>, and <code>run(ctx, args) !u8</code>. Stdio reads/writes go through a <code>Context</code> struct so tests construct one with <code>.fixed(...)</code> writers.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<h4>CROSS-COMPILE TARGETS &nbsp;<span style="color:var(--ov0)">// zig build -Dtarget=...</span></h4>
+<div><span class="env">x86_64-linux-gnu</span><span class="desc">glibc 2.35+</span></div>
+<div><span class="env">x86_64-linux-musl</span><span class="desc">Alpine · distroless · scratch</span></div>
+<div><span class="env">aarch64-linux-gnu</span><span class="desc">glibc 2.39+</span></div>
+<div><span class="env">aarch64-linux-musl</span><span class="desc">Alpine ARM64</span></div>
+<div><span class="env">x86_64-windows-gnu</span><span class="desc">Windows Intel</span></div>
+<div><span class="env">aarch64-windows-gnu</span><span class="desc">Windows ARM64</span></div>
+<div><span class="env">x86_64-macos</span><span class="desc">Intel Mac</span></div>
+<div><span class="env">aarch64-macos</span><span class="desc">Apple Silicon</span></div>
 
-    <!-- Getting Started -->
-    <section>
-        <div class="container">
-            <div class="section-label animate">GETTING STARTED</div>
-            <h2 class="section-title animate" style="transition-delay:.08s">Install or build</h2>
-            <p class="section-desc animate" style="transition-delay:.16s">Pre-built binaries on the releases page, or build from source for the full hackable experience. Cross-compile every target from one host.</p>
-            <div class="two-col">
-                <div class="terminal animate" style="transition-delay:.1s">
-                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">install.sh</span></div>
-                    <div class="terminal-body"><pre><span class="t-m"># Linux / macOS — pre-built binary</span>
-<span class="t-g">$</span> curl -LO https://github.com/Real-Fruit-Snacks/\\
-&nbsp;&nbsp;&nbsp;&nbsp;staysail/releases/latest/download/staysail-linux-x64
-<span class="t-g">$</span> chmod +x staysail-linux-x64 && ./staysail-linux-x64 --version
-<span class="t-b">staysail 1.0.0</span>
+<h4>BUILD VARIABLES &nbsp;<span style="color:var(--ov0)">// zig build -D...</span></h4>
+<div><code>preset=full|slim|min</code><span class="desc">Bundle preset (default: full)</span></div>
+<div><code>applets=&lt;list&gt;</code><span class="desc">Hand-pick (overrides preset)</span></div>
+<div><code>optimize=ReleaseSmall</code><span class="desc">Default: Debug</span></div>
+<div><code>target=&lt;triple&gt;</code><span class="desc">Cross-compile target</span></div>
+</div>
+  </div>
+</div>
 
-<span class="t-m"># Windows (PowerShell)</span>
-<span class="t-g">PS&gt;</span> Invoke-WebRequest -OutFile staysail.exe `
-&nbsp;&nbsp;&nbsp;&nbsp;https://github.com/Real-Fruit-Snacks/Staysail/releases/`
-&nbsp;&nbsp;&nbsp;&nbsp;latest/download/staysail-windows-x64.exe
+<div class="grid">
+  <div class="cell">
+    <div class="cell-header">
+      <span class="cell-num">05</span>
+      <span class="cell-name">Architecture</span>
+    </div>
+    <h2>Four-layer flow.</h2>
+    <p>Entry → dispatch → comptime registry → applet. The same path whether invoked directly, via subcommand, or through a symlink.</p>
+<pre class="code"><span class="c">src/</span>
+main.zig             <span class="c">// process entry · stdio init · calls dispatch</span>
+   ↓
+registry.zig         <span class="c">// argv[0] basename match · subcommand fallback</span>
+                     <span class="c">// comptime-built applet table from build_options</span>
+   ↓
+applets/all.zig      <span class="c">// static index · one pub const per applet</span>
+                     <span class="c">// active set filtered at compile time</span>
+   ↓
+applets/&lt;name&gt;.zig   <span class="c">// per-applet · exports name · aliases · help · run</span>
 
-<span class="t-m"># Or build from source — Zig 0.16+</span>
-<span class="t-g">$</span> git clone https://github.com/Real-Fruit-Snacks/Staysail
-<span class="t-g">$</span> cd staysail && zig build -Doptimize=ReleaseSmall
-<span class="t-b">→ ./zig-out/bin/staysail (~1 MB, fully static on musl)</span>
+<span class="c">tests/</span>
+zig build test       <span class="c">// unit ~10ms</span>
+integration/smoke.sh <span class="c">// 87 bats assertions</span></pre>
+  </div>
 
-<span class="t-m"># Cross-compile every target from one host</span>
-<span class="t-g">$</span> zig build -Dtarget=x86_64-linux-musl -Doptimize=ReleaseSmall
-<span class="t-g">$</span> zig build -Dtarget=aarch64-macos -Doptimize=ReleaseSmall</pre></div>
-                </div>
-                <div class="terminal animate" style="transition-delay:.25s">
-                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">usage.sh</span></div>
-                    <div class="terminal-body"><pre><span class="t-m"># Daily pipelines — find + awk + jq, all in one binary</span>
-<span class="t-g">$</span> staysail find . -name '*.zig' -mtime -7
-<span class="t-g">$</span> staysail awk '{ s+=$1 } END{ print s/NR }' data.csv
+  <div class="cell">
+    <div class="cell-header">
+      <span class="cell-num">06</span>
+      <span class="cell-name">The Family</span>
+    </div>
+    <h2>Same idea, six languages.</h2>
+    <p>Same applet contract. Same flag conventions. Same exit codes. Different size/portability tradeoffs.</p>
+<table class="family">
+<thead><tr><th>Tool</th><th>Lang</th><th>Size</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/Real-Fruit-Snacks/rill">rill</a></td><td class="lang">ASM</td><td class="size">~34 KB</td><td class="note">Pure NASM · no libc</td></tr>
+<tr><td><a href="https://github.com/Real-Fruit-Snacks/moonraker">moonraker</a></td><td class="lang">Lua</td><td class="size">~1.2 MB</td><td class="note">Embedded Lua VM</td></tr>
+<tr class="me"><td><a href="https://github.com/Real-Fruit-Snacks/Staysail">staysail</a></td><td class="lang">Zig</td><td class="size">~1 MB</td><td class="note">Smallest fully native</td></tr>
+<tr><td><a href="https://github.com/Real-Fruit-Snacks/jib">jib</a></td><td class="lang">Rust</td><td class="size">~2.4 MB</td><td class="note">+ jq · http · dig</td></tr>
+<tr><td><a href="https://github.com/Real-Fruit-Snacks/topsail">topsail</a></td><td class="lang">Go</td><td class="size">~3.4 MB</td><td class="note">.deb · .rpm · .apk</td></tr>
+<tr><td><a href="https://github.com/Real-Fruit-Snacks/mainsail">mainsail</a></td><td class="lang">Py</td><td class="size">~5.5 MB</td><td class="note">Or ~110 KB .pyz</td></tr>
+</tbody>
+</table>
+  </div>
+</div>
 
-<span class="t-m"># Real jq with constructors + if/then/else</span>
-<span class="t-g">$</span> staysail jq -r '.users
-&nbsp;&nbsp;&nbsp;&nbsp;| map(select(.region == "us"))
-&nbsp;&nbsp;&nbsp;&nbsp;| sort_by(.name)
-&nbsp;&nbsp;&nbsp;&nbsp;| .[].name' inv.json
+<div class="band">
+  <div class="band-tag">→ START HERE</div>
+  <h3>One zig build,<br>every target.</h3>
+  <a class="cta" href="https://github.com/Real-Fruit-Snacks/Staysail">Open repo</a>
+</div>
 
-<span class="t-m"># HTTPS via Zig's TLS stack</span>
-<span class="t-g">$</span> staysail http -i https://api.github.com/zen
+<footer>
+  <span>© 2026 Real-Fruit-Snacks · MIT</span>
+  <span>
+    <a href="https://real-fruit-snacks.github.io/">all 50 projects</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail">github</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail/releases/latest">releases</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/ARCHITECTURE.md">arch</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/PARITY.md">parity</a>
+  </span>
+</footer>
 
-<span class="t-m"># Symlink every applet to ~/.local/bin</span>
-<span class="t-g">$</span> staysail install-aliases ~/.local/bin
-<span class="t-b">created 84 aliases in ~/.local/bin</span>
-
-<span class="t-m"># Self-update from latest release</span>
-<span class="t-g">$</span> staysail update
-<span class="t-b">updated to 1.0.0</span></pre></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-line"></div>
-            <div class="footer-grid">
-                <div>
-                    <h4>Documentation</h4>
-                    <ul>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail#quick-start">Quick Start</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail#features">Features</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail#supported-applets">Applets</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/ARCHITECTURE.md">Architecture</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/PARITY.md">Parity tracker</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/releases/latest">Latest Release</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/issues">Report Issue</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/docs/CONTRIBUTING.md">Contributing</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/actions">CI Status</a></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/Staysail/blob/main/CHANGELOG.md">Changelog</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>Sail family</h4>
-                    <ul>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/rill">rill</a> <span style="color:var(--ov0);font-size:11px">(ASM · ~34 KB)</span></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/moonraker">moonraker</a> <span style="color:var(--ov0);font-size:11px">(Lua · ~1.2 MB)</span></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/jib">jib</a> <span style="color:var(--ov0);font-size:11px">(Rust · ~2.4 MB)</span></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/topsail">topsail</a> <span style="color:var(--ov0);font-size:11px">(Go · ~3.4 MB)</span></li>
-                        <li><a href="https://github.com/Real-Fruit-Snacks/mainsail">mainsail</a> <span style="color:var(--ov0);font-size:11px">(Python · ~5.5 MB)</span></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>License</h4>
-                    <p>MIT License<br>Copyright © 2026<br>Real-Fruit-Snacks</p>
-                </div>
-            </div>
-            <div class="footer-bottom">Part of the Real-Fruit-Snacks sail-themed toolkit · Zig sibling of <a href="https://github.com/Real-Fruit-Snacks/mainsail" style="color:var(--accent1)">mainsail</a></div>
-        </div>
-    </footer>
-
-    <script>
-    // Scroll animations
-    const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('visible');obs.unobserve(el.target)}})},{threshold:.1,rootMargin:'0px 0px -50px 0px'});
-    document.querySelectorAll('.animate,.animate-scale').forEach(el=>obs.observe(el));
-
-    // Counter animation
-    function countUp(el){const t=parseInt(el.dataset.target),s=el.dataset.suffix||'',p=el.dataset.prefix||'',d=1500,st=performance.now();function u(n){const pr=Math.min((n-st)/d,1),e=1-Math.pow(1-pr,3);el.textContent=p+Math.floor(t*e)+s;if(pr<1)requestAnimationFrame(u)}requestAnimationFrame(u)}
-    const sobs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){countUp(el.target);sobs.unobserve(el.target)}})},{threshold:.5});
-    document.querySelectorAll('.stat-num').forEach(el=>sobs.observe(el));
-
-    // Nav scroll
-    window.addEventListener('scroll',()=>{document.querySelector('.nav').style.borderBottomColor=window.scrollY>20?'rgba(49,50,68,0.8)':'rgba(49,50,68,0.3)'});
-    </script>
 </body>
 </html>
