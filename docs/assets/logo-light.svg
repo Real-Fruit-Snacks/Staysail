@@ -18,15 +18,19 @@
   <line x1="400" y1="140" x2="400" y2="200" stroke="#bcc0cc" stroke-width="1"/>
   <line x1="600" y1="140" x2="600" y2="200" stroke="#bcc0cc" stroke-width="1"/>
 
-  <text x="20" y="158" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="9" font-weight="600" fill="#9ca0b0" letter-spacing="2">BINARY</text>
-  <text x="20" y="186" font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#1e1e2e" letter-spacing="-1">~1<tspan fill="#df8e1d" font-size="14"> MB STATIC</tspan></text>
+  <text x="20" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#9ca0b0" letter-spacing="1">BINARY</text>
+  <text x="20" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#df8e1d" letter-spacing="0">~1 MB STATIC</text>
+  <text x="20" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#9ca0b0" letter-spacing="0">FULLY STATIC · MUSL LINKED</text>
 
-  <text x="220" y="158" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="9" font-weight="600" fill="#9ca0b0" letter-spacing="2">APPLETS</text>
-  <text x="220" y="186" font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#1e1e2e" letter-spacing="-1">84<tspan fill="#df8e1d" font-size="14"> × POSIX</tspan></text>
+  <text x="220" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#9ca0b0" letter-spacing="1">APPLETS</text>
+  <text x="220" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#df8e1d" letter-spacing="0">84 POSIX</text>
+  <text x="220" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#9ca0b0" letter-spacing="0">COREUTILS · BUSYBOX-LIKE</text>
 
-  <text x="420" y="158" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="9" font-weight="600" fill="#9ca0b0" letter-spacing="2">TARGETS</text>
-  <text x="420" y="186" font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#1e1e2e" letter-spacing="-1">8<tspan fill="#df8e1d" font-size="14"> × NATIVE</tspan></text>
+  <text x="420" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#9ca0b0" letter-spacing="1">TARGETS</text>
+  <text x="420" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#df8e1d" letter-spacing="0">8 NATIVE</text>
+  <text x="420" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#9ca0b0" letter-spacing="0">LINUX · MACOS · WINDOWS</text>
 
-  <text x="620" y="158" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="9" font-weight="600" fill="#9ca0b0" letter-spacing="2">STACK</text>
-  <text x="620" y="186" font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#1e1e2e" letter-spacing="-1">ZIG<tspan fill="#df8e1d" font-size="14"> 0.16+</tspan></text>
+  <text x="620" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#9ca0b0" letter-spacing="1">STACK</text>
+  <text x="620" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#df8e1d" letter-spacing="0">ZIG 0.16+</text>
+  <text x="620" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#9ca0b0" letter-spacing="0">CROSS-COMPILE · ZERO DEPS</text>
 </svg>
