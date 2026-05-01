@@ -6,8 +6,8 @@
   <line x1="0" y1="32" x2="800" y2="32" stroke="#313244" stroke-width="1"/>
   <text x="20" y="22" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#cba6f7" letter-spacing="2">RFS</text>
   <text x="60" y="22" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="10" font-weight="500" fill="#6c7086" letter-spacing="2">·  STAYSAIL  ·  ZIG MULTI-CALL BINARY</text>
-  <circle cx="600" cy="18" r="3" fill="#a6e3a1"/>
-  <text x="610" y="22" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="10" font-weight="500" fill="#585b70" letter-spacing="2">8 BUILDS · CI</text>
+  <circle cx="668" cy="18" r="3" fill="#a6e3a1"/>
+  <text x="780" y="22" text-anchor="end" font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="10" font-weight="500" fill="#585b70" letter-spacing="2">8 BUILDS · CI</text>
 
   <!-- Wordmark -->
   <text x="20" y="115" font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="800" fill="#cdd6f4" letter-spacing="-4">STAYSAIL<tspan fill="#f9e2af">.</tspan></text>
